@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
-import { IntroScreen } from './components/IntroScreen';
+import { motion, useScroll, useSpring } from 'motion/react';
 import { CustomCursor } from './components/animations/CustomCursor';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
@@ -12,9 +11,6 @@ import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 
 export default function App() {
-  // Always show intro screen on page load / refresh
-  const [showIntro, setShowIntro] = useState(true);
-
   // View state: 'home' or 'all-projects'
   const [currentView, setCurrentView] = useState<'home' | 'all-projects'>(() => {
     if (typeof window !== 'undefined') {
@@ -71,38 +67,29 @@ export default function App() {
       return true;
     };
 
-    // Attempt 1: Immediate execution via requestAnimationFrame
+    // Immediate execution via requestAnimationFrame
     requestAnimationFrame(() => {
       executeScroll();
     });
 
-    // Attempt 2: Mid-drawer collapse (~100ms)
-    // On mobile devices (iOS Safari & Android Chrome), collapsing the fixed mobile drawer
-    // causes layout reflows during the exit animation that can interrupt smooth scrolling.
+    // Secondary settle for mobile
     setTimeout(() => {
       executeScroll();
-    }, 100);
-
-    // Attempt 3: Post-drawer collapse settle (~240ms, mobile drawer animation is 200ms)
-    // Guarantees the viewport lands precisely at the target section on mobile devices.
-    setTimeout(() => {
-      executeScroll();
-    }, 240);
+    }, 120);
   }, []);
 
-  const handleIntroComplete = () => {
-    setShowIntro(false);
-    
-    // Check if initial URL had a hash to scroll to
+  // On initial mount, handle any URL hash directly without intro delay
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '');
       if (hash && hash !== 'all-projects') {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           performSmoothScroll(hash);
-        }, 120);
+        }, 80);
+        return () => clearTimeout(timer);
       }
     }
-  };
+  }, [performSmoothScroll]);
 
   // Primary navigation handler
   const handleNavigate = useCallback((rawSectionId: string) => {
@@ -237,15 +224,7 @@ export default function App() {
       {/* Precision CAD Custom Cursor for Desktop */}
       <CustomCursor />
 
-      {/* 0. Fullscreen Minimalist Intro Screen with Typing Animation (Plays on every page refresh) */}
-      <AnimatePresence mode="wait">
-        {showIntro && (
-          <IntroScreen key="intro-screen" onComplete={handleIntroComplete} />
-        )}
-      </AnimatePresence>
-
       <div className="min-h-screen bg-[#F7F7F7] text-[#393E46] selection:bg-[#393E46] selection:text-[#F7F7F7] font-sans antialiased">
-        
         {/* Top Precision Scroll Progress Line */}
         <motion.div
           className="fixed top-0 left-0 right-0 h-[2px] bg-[#393E46] origin-left z-50 pointer-events-none"
@@ -300,7 +279,6 @@ export default function App() {
         <Footer 
           onNavigate={handleNavigate}
         />
-
       </div>
     </>
   );

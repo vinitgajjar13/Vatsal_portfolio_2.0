@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, currentView = 'ho
     { label: 'About', id: 'about' },
     { label: 'Projects', id: 'projects' },
     { label: 'Skills', id: 'skills' },
-    // { label: 'Contact', id: 'contact' },
+    { label: 'Contact', id: 'contact' },
   ];
 
   const handleLinkClick = (id: string) => {
